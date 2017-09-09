@@ -33,7 +33,7 @@ export default class App extends React.Component {
             )}
           </tbody>
         </table>
-        {this.state.gameover && (
+        {(this.state.gameover || this.state.moves === 9) && (
           <div className="reset-game">
             <button onClick={this.resetGame}>Start Over</button>
           </div>
@@ -66,10 +66,12 @@ export default class App extends React.Component {
 
   checkLine = (x, y, x1, y1, x2, y2) => {
     let f = this.state.field;
-    return (f[x][y]===f[x1][y1] && f[x1][y1]===f[x2][y2] ? f[x][y] : false)
+    if(f[x][y] === '' || f[x1][y1] === '' || f[x2][y2] === '') return false;
+    return (f[x][y] === f[x1][y1] && f[x1][y1] === f[x2][y2] ? f[x1][y1] : false);
   }
 
   validateGame = () => {
+    console.log('validateGame')
     let winner = 
     //check horizontally
       this.checkLine(0,0,0,1,0,2) ||
@@ -85,9 +87,12 @@ export default class App extends React.Component {
 
     console.log(winner)
 
-    if(winner !== false) this.setState({
-      gameover: true,
-      winner: winner
-    });
+    if(winner !== false) {
+console.log('validateGame changed the state')
+        this.setState({
+        gameover: true,
+        winner: winner
+      });
+    }
   }
 }
