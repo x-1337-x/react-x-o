@@ -71,7 +71,6 @@ export default class App extends React.Component {
   }
 
   validateGame = () => {
-    console.log('validateGame')
     let winner = 
     //check horizontally
       this.checkLine(0,0,0,1,0,2) ||
@@ -88,7 +87,6 @@ export default class App extends React.Component {
     console.log(winner)
 
     if(winner !== false) {
-console.log('validateGame changed the state')
         this.setState({
         gameover: true,
         winner: winner
