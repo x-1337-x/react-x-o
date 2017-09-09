@@ -82,7 +82,7 @@ export default class App extends React.Component {
       this.checkLine(0,2,1,2,2,2) ||
     //check diagonally
       this.checkLine(0,0,1,1,2,2) ||
-      this.checkLine(0,2,1,1,0,2);
+      this.checkLine(0,2,1,1,2,0);
 
     console.log(winner)
 
