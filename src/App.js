@@ -18,7 +18,7 @@ export default class App extends React.Component {
           <h1>yippi-ka-yay</h1>
         )}
         {this.state.gameover && (
-          <h1>{this.state.winner} won</h1>
+          <h1>{this.state.winner === null ? 'DRAW' : `${this.state.player} won`}</h1>
         )}
         <table>
           <tbody>
@@ -49,7 +49,8 @@ export default class App extends React.Component {
     this.setState({
       field: newField,
       player: player === 'X' ? 'O' : 'X',
-      moves: moves + 1
+      moves: moves + 1,
+      gameover: (moves + 1 === 9)
     });
     if (moves > 3) this.validateGame();
   }
