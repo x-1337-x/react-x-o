@@ -26,7 +26,7 @@ export default class App extends React.Component {
               <tr key={y}>
                 {row.map((col, x) => 
                   <td key={x} onClick={col === '' && !this.state.winner ? () => this.placeMark(y, x) : null}>
-                    {col}
+                    {col !== '' ? col : <span>{this.state.player}</span>}
                   </td>
                 )}
               </tr>
