@@ -1,39 +1,55 @@
 import React from 'react';
+import io from 'socket.io-client';
 import './App.css'
 
 export default class App extends React.Component {
 
+  constructor(props) {
+    super(props);
+    this.socket = io('http://localhost:5555');
+    this.socket.on('games', (games) => this.setState({games}));
+    this.socket.on('joined a game', (game) => this.setState({game}));
+  }
+
   state = {
-    field: Array(3).fill('').map(a => Array(3).fill('')),
-    player: 'X',
-    gameover: false,
-    moves: 0,
-    winner: null
+    games: null,
+    game: null
   }
 
   render() {
+    let {games, game} = this.state;
     return (
       <div className="game">
-        {!this.state.gameover && (
+
+        <button onClick={this.createGame}>Create A Game</button>
+        {games && (
+          games.map(game =>
+            <div>
+              {game.id} <button onClick={this.joinGame.bind(this, game.id)}>JOIN</button>
+            </div>
+          )
+        )}
+
+        {game && !game.gameover && (
           <h1>yippi-ka-yay</h1>
         )}
-        {this.state.gameover && (
-          <h1>{this.state.winner === null ? 'DRAW' : `${this.state.winner} won`}</h1>
+        {game && game.gameover && (
+          <h1>{game.winner === null ? 'DRAW' : `${game.winner} won`}</h1>
         )}
-        <table>
+        {game && (<table>
           <tbody>
-            {this.state.field.map((row, y) =>
+            {game.field.map((row, y) =>
               <tr key={y}>
                 {row.map((col, x) => 
-                  <td key={x} onClick={col === '' && !this.state.winner ? () => this.placeMark(y, x) : null}>
-                    {col !== '' ? col : <span>{this.state.player}</span>}
+                  <td key={x} onClick={col === '' && !game.winner ? () => this.placeMark(y, x) : null}>
+                    {col !== '' ? col : <span>{game.player}</span>}
                   </td>
                 )}
               </tr>
             )}
           </tbody>
-        </table>
-        {(this.state.gameover || this.state.moves === 9) && (
+        </table>)}
+        {game && (game.gameover || game.moves === 9) && (
           <div className="reset-game">
             <button onClick={this.resetGame}>Start Over</button>
           </div>
@@ -93,5 +109,13 @@ export default class App extends React.Component {
         winner: winner
       });
     }
+  }
+
+  createGame = () => {
+    this.socket.emit('create game');
+  }
+
+  joinGame = (gameId) => {
+    this.socket.emit('join game', gameId);
   }
 }
