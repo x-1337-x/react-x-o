@@ -7,17 +7,19 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.socket = io('http://localhost:5555');
-    this.socket.on('games', (games) => this.setState({games}));
-    this.socket.on('joined a game', (game) => this.setState({game}));
+    this.socket.on('games', games => this.setState({games}));
+    this.socket.on('game', game => this.setState({game}));
+    this.socket.on('joined a game', (data) => this.setState({game: data.game, mark: data.mark}));
   }
 
   state = {
     games: null,
-    game: null
+    game: null,
+    mark: null
   }
 
   render() {
-    let {games, game} = this.state;
+    let {games, game, mark} = this.state;
     return (
       <div className="game">
 
@@ -41,8 +43,8 @@ export default class App extends React.Component {
             {game.field.map((row, y) =>
               <tr key={y}>
                 {row.map((col, x) => 
-                  <td key={x} onClick={col === '' && !game.winner ? () => this.placeMark(y, x) : null}>
-                    {col !== '' ? col : <span>{game.player}</span>}
+                  <td key={x} onClick={col === '' && !game.winner ? () => this.placeMark(game.id, y, x) : null}>
+                    {col !== '' ? col : <span>{mark}</span>}
                   </td>
                 )}
               </tr>
@@ -58,64 +60,21 @@ export default class App extends React.Component {
     )
   }
 
-  placeMark = (y, x) => {
-    let {field, player, moves} = this.state;
-    let newField = field.slice();
-    newField[y][x] = player;
-    this.setState({
-      field: newField,
-      player: player === 'X' ? 'O' : 'X',
-      moves: moves + 1,
-      gameover: (moves + 1 === 9)
-    });
-    if (moves > 3) this.validateGame();
+  placeMark = (gameId, y, x) => {
+    if(this.state.mark !== this.state.game.turn) return;
+    console.log('placed mark')
+    this.socket.emit('place mark', {gameId, y, x, socketId: this.socket.id});
   }
 
   resetGame = () => {
-    this.setState({
-      field: Array(3).fill('').map(a => Array(3).fill('')),
-      player: 'X',
-      gameover: false,
-      moves: 0,
-      winner: null
-    })
-  }
-
-  checkLine = (x, y, x1, y1, x2, y2) => {
-    let f = this.state.field;
-    if(f[x][y] === '' || f[x1][y1] === '' || f[x2][y2] === '') return false;
-    return (f[x][y] === f[x1][y1] && f[x1][y1] === f[x2][y2] ? f[x1][y1] : false);
-  }
-
-  validateGame = () => {
-    let winner = 
-    //check horizontally
-      this.checkLine(0,0,0,1,0,2) ||
-      this.checkLine(1,0,1,1,1,2) ||
-      this.checkLine(2,0,2,1,2,2) ||
-    //check vaertically
-      this.checkLine(0,0,1,0,2,0) ||
-      this.checkLine(0,1,1,1,2,1) ||
-      this.checkLine(0,2,1,2,2,2) ||
-    //check diagonally
-      this.checkLine(0,0,1,1,2,2) ||
-      this.checkLine(0,2,1,1,2,0);
-
-    console.log(winner)
-
-    if(winner !== false) {
-        this.setState({
-        gameover: true,
-        winner: winner
-      });
-    }
+    
   }
 
   createGame = () => {
-    this.socket.emit('create game');
+    this.socket.emit('create game', this.socket.id);
   }
 
   joinGame = (gameId) => {
-    this.socket.emit('join game', gameId);
+    this.socket.emit('join game', {gameId, socketId: this.socket.id});
   }
 }
