@@ -36,8 +36,8 @@ td:hover span {
   margin: 20px auto;
 }
 
-.reset-game button {
+.btn-lg {
   width: 100%;
-  padding: 10px 0;
+  padding: 10px 10px;
   font-size: 36px;
 }

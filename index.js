@@ -29,69 +29,50 @@ const createGame = () => {
   }
 }
 
-const placeMark = (y, x) => {
-  let {field, player, moves} = this.state;
-  let newField = field.slice();
-  newField[y][x] = player;
-  this.setState({
-    field: newField,
-    player: player === 'X' ? 'O' : 'X',
-    moves: moves + 1,
-    gameover: (moves + 1 === 9)
-  });
-  if (moves > 3) this.validateGame();
+const findGame = gameId => games.find(game => game.id === gameId);
+
+
+const checkLine = (x, y, x1, y1, x2, y2, field) => {
+  let f = field;
+  if(f[x][y] === '' || f[x1][y1] === '' || f[x2][y2] === '') return false;
+  return (f[x][y] === f[x1][y1] && f[x1][y1] === f[x2][y2] ? f[x1][y1] : false);
 }
 
-const resetGame = () => {
-  this.setState({
-    field: Array(3).fill('').map(a => Array(3).fill('')),
-    player: 'X',
-    gameover: false,
-    moves: 0,
-    winner: null
-  })
+const validateGame = (game) => {
+  let field = game.field;
+  let winner = 
+  //check horizontally
+    checkLine(0,0,0,1,0,2,field) ||
+    checkLine(1,0,1,1,1,2,field) ||
+    checkLine(2,0,2,1,2,2,field) ||
+  //check vaertically
+    checkLine(0,0,1,0,2,0,field) ||
+    checkLine(0,1,1,1,2,1,field) ||
+    checkLine(0,2,1,2,2,2,field) ||
+  //check diagonally
+    checkLine(0,0,1,1,2,2,field) ||
+    checkLine(0,2,1,1,2,0,field);
+
+  console.log(winner)
+
+  if(winner !== false) { 
+    game.gameover = true,
+    game.winner = winner
+  };
+
+  return game;
 }
-
-// const checkLine = (x, y, x1, y1, x2, y2) => {
-//   let f = this.state.field;
-//   if(f[x][y] === '' || f[x1][y1] === '' || f[x2][y2] === '') return false;
-//   return (f[x][y] === f[x1][y1] && f[x1][y1] === f[x2][y2] ? f[x1][y1] : false);
-// }
-
-// const validateGame = () => {
-//   let winner = 
-//   //check horizontally
-//     this.checkLine(0,0,0,1,0,2) ||
-//     this.checkLine(1,0,1,1,1,2) ||
-//     this.checkLine(2,0,2,1,2,2) ||
-//   //check vaertically
-//     this.checkLine(0,0,1,0,2,0) ||
-//     this.checkLine(0,1,1,1,2,1) ||
-//     this.checkLine(0,2,1,2,2,2) ||
-//   //check diagonally
-//     this.checkLine(0,0,1,1,2,2) ||
-//     this.checkLine(0,2,1,1,2,0);
-
-//   console.log(winner)
-
-//   if(winner !== false) {
-//       this.setState({
-//       gameover: true,
-//       winner: winner
-//     });
-//   }
-// }
 
 io.on('connection', function (socket) {
   socket.emit('games', games.filter(game => game.playerIds.length < 2));
 
   socket.on('create game', function() {
     games.push(createGame());
-    io.emit('games', games);
+    io.emit('games', games.filter(game => game.playerIds.length < 2));
   })
 
   socket.on('join game', function(data) {
-    let game = games.find(game => game.id === data.gameId);
+    let game = findGame(data.gameId);
     if (game) {
       game.playerIds.push(data.socketId);
       if(game.X === null) {
@@ -100,27 +81,41 @@ io.on('connection', function (socket) {
         game.O = data.socketId;
       };
       let mark = game.getKeyByValue(data.socketId);
-      console.log(mark)
       socket.emit('joined a game', {game, mark});
       for(let i in game.playerIds) {
         io.to(game.playerIds[i]).emit('game', game)
-      }
+      };
       io.emit('games', games.filter(game => game.playerIds.length < 2));
     }
   })
 
   socket.on('place mark', function(data) {
-        console.log(games)
-    let game = games.find(game => game.id === data.gameId);
-        console.log(data)
+    let game = findGame(data.gameId);
     if (game) {
       game.field[data.y][data.x] = game.turn;
       game.turn = game.turn === 'X' ? 'O' : 'X';
       game.moves++;
-      game.gameover = (game.moves + 1 === 9);
+      game.gameover = (game.moves === 9);
+      if (game.moves > 3) game = validateGame(game);
+      io.to(game.playerIds[0]).emit('game', game);
+      io.to(game.playerIds[1]).emit('game', game);
+    };
+      console.log(games)
+  });
+
+  socket.on('reset game', function(gameId) {
+    let game = findGame(gameId);
+    if (game) {
+      console.log('Resetting....')
+      game.field = Array(3).fill('').map(a => Array(3).fill(''));
+      game.turn = Math.random() > 0.5 ? 'X' : 'O';
+      game.gameover = false;
+      game.moves = 0;
+      game.winner = null;
       io.to(game.playerIds[0]).emit('game', game);
       io.to(game.playerIds[1]).emit('game', game);
     };
   });
+
 });
 
