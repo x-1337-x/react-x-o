@@ -6,7 +6,7 @@ export default class App extends React.Component {
 
   constructor(props) {
     super(props);
-    this.socket = io(const socketURL = process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:5000';);
+    this.socket = io(process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:5000';);
     this.socket.on('games', games => this.setState({games}));
     this.socket.on('game', game => this.setState({game}));
     this.socket.on('joined a game', (data) => this.setState({game: data.game, mark: data.mark}));
