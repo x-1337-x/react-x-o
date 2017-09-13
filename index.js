@@ -2,7 +2,13 @@ const app = require('express')();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
-server.listen(5555);
+server.listen(process.env.PORT || 5555);
+
+app.use(express.static(path.join(__dirname + '/build')));
+
+app.get('/', function (req, res) {
+  res.sendfile(__dirname + './build/index.html');
+});
 
 let games = [];
 
