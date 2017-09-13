@@ -61,8 +61,6 @@ const validateGame = (game) => {
     checkLine(0,0,1,1,2,2,field) ||
     checkLine(0,2,1,1,2,0,field);
 
-  console.log(winner)
-
   if(winner !== false) { 
     game.gameover = true,
     game.winner = winner
@@ -108,7 +106,6 @@ io.on('connection', function (socket) {
       io.to(game.playerIds[0]).emit('game', game);
       io.to(game.playerIds[1]).emit('game', game);
     };
-      console.log(games)
   });
 
   socket.on('reset game', function(gameId) {
