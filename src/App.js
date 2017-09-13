@@ -38,7 +38,7 @@ export default class App extends React.Component {
         {game && !game.gameover && (
           <div>
             <h1>yippi-ka-yay</h1>
-            <h1>{`${game.turn}'s turn`}</h1>
+            {game.turn === mark ? <h1>{`Your turn, ${mark}`}</h1> : <h1>{`${game.turn}'s turn`}</h1>}
           </div>
         )}
         
